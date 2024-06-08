@@ -76,6 +76,7 @@ obj-$(CONFIG_SND_SOC_LITTLEMILL) += snd-soc-littlemill.o
 obj-$(CONFIG_SND_SOC_BELLS) += snd-soc-bells.o
 obj-$(CONFIG_SND_SOC_ARNDALE_RT5631_ALC5631) += snd-soc-arndale-rt5631.o
 obj-$(CONFIG_SND_SOC_SAMSUNG_EXYNOS8895_MOON) += exynos8895_madera.o
+obj-$(CONFIG_SND_SOC_SAMSUNG_EXYNOS8895_ASHETON) += dream_madera.o jack_madera_sysfs_cb.o
 obj-$(CONFIG_SND_SOC_SAMSUNG_EXYNOS8895_COD3033) += exynos8895_sound.o
 obj-$(CONFIG_SND_SOC_SAMSUNG_EXYNOS9810_MOON) += exynos9810_madera.o
 obj-$(CONFIG_SND_SOC_SAMSUNG_STAR_ASHETON) += snd-soc-star-madera.o
