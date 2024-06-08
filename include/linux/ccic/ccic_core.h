@@ -124,6 +124,8 @@ void ccic_send_dock_uevent(u32 vid, u32 pid, int state);
 void *ccic_core_get_drvdata(void);
 int ccic_misc_init(pccic_data_t pccic_data);
 void ccic_misc_exit(void);
+#ifdef CONFIG_SOC_EXYNOS9810
 extern unsigned int pn_flag;
+#endif
 #endif
 

@@ -67,13 +67,13 @@ static int ccic_misc_open(struct inode *inode, struct file *file)
 		ret = -ENODEV;
 		goto err;
 	}
-
+#ifdef CONFIG_SOC_EXYNOS9810
 	if (pn_flag) {
 		pr_err("%s - error : powernego flag is setting\n", __func__);
 		ret = -EACCES;
 		goto err;
 	}
-
+#endif
 	if (_lock(&c_dev->open_excl)) {
 		pr_err("%s - error : device busy\n", __func__);
 		ret = -EBUSY;
@@ -127,13 +127,13 @@ ccic_misc_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 {
 	int ret = 0;
 	void *buf = NULL;
-
+#ifdef CONFIG_SOC_EXYNOS9810
 	if (pn_flag) {
 		pr_err("%s - error : powernego flag is setting\n", __func__);
 		ret = -EACCES;
 		goto err2;
 	}
-
+#endif
 	if (_lock(&c_dev->ioctl_excl)) {
 		pr_err("%s - error : ioctl busy - cmd : %d\n", __func__, cmd);
 		ret = -EBUSY;
