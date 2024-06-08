@@ -1616,6 +1616,12 @@ static void check_gpio_status(unsigned char phonestate, const char *skip_grps)
 	}
 }
 
+struct gpio_dvs_t exynos8895_secgpio_dvs = {
+	.result = &gpiomap_result,
+	.check_gpio_status = check_gpio_status,
+	.get_nr_gpio = exynos8895_secgpio_get_nr_gpio,
+};
+
 struct gpio_dvs_t exynos9810_secgpio_dvs = {
 	.result = &gpiomap_result,
 	.check_gpio_status = check_gpio_status,

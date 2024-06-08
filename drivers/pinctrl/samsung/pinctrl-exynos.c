@@ -2069,6 +2069,19 @@ const struct samsung_pin_ctrl exynos9810_pin_ctrl[] = {
 };
 
 #ifdef CONFIG_SEC_GPIO_DVS
+int exynos8895_secgpio_get_nr_gpio(void)
+{
+	int i, j;
+	int nr_gpio = 0;
+
+	for (i = 0; i < ARRAY_SIZE(exynos8895_pin_ctrl); i++) {
+		for (j = 0; j < exynos8895_pin_ctrl[i].nr_banks; j++)
+			nr_gpio += exynos8895_pin_ctrl[i].pin_banks[j].nr_pins;
+	}
+
+	return nr_gpio;
+}
+
 int exynos9810_secgpio_get_nr_gpio(void)
 {
 	int i, j;
