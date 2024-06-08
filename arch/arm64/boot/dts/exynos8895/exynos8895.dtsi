@@ -3689,20 +3689,19 @@
 		ch-num = <0>;
 		pcie-clk-num = <0>;
 		phy-clk-num = <0>;
-		pcie-irq-toe-enable = <0>;
-		pcie-irq-toe-num = <10>;
-		pcie-irq-msi-cp-enable = <0>;
-		pcie-irq-msi-cp-base-bit = <16>;
-		pcie-irq-msi-cp-num = <4>;
 		pcie-pm-qos-int = <0>;
 		use-cache-coherency = "true";
 		use-msi = "false";
 		use-sicd = "true";
+		use-sysmmu = "true";
+		use-ia = "false";
+		max-link-speed = <2>;
 		status = "okay";
+		ep-device-type = <1>;
 	};
 
 	pcie1@116B0000 {
-		compatible = "samsung,exynos8895-pcie";
+		compatible = "samsung,exynos-pcie";
 		gpios = <&gpj1 6 0x1 /* PERST */>;
 		reg = <0x0 0x116B0000 0x1000    /* elbi base */
 			0x0 0x116D0000 0x1000   /* phy base */
@@ -3736,6 +3735,8 @@
 		use-cache-coherency = "true";
 		use-msi = "false";
 		use-sicd = "true";
+		use-sysmmu = "false";
+		max-link-speed = <3>;
 		status = "disabled";
 	};
 
