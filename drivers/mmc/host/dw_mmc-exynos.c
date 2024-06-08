@@ -233,6 +233,7 @@ static int dw_mci_exynos_priv_init(struct dw_mci *host)
 	return 0;
 }
 
+#ifdef CONFIG_SOC_EXYNOS9810
 static void dw_mci_ssclk_control(struct dw_mci *host, int enable)
 {
 	if (host->pdata->quirks & DW_MCI_QUIRK_USE_SSC) {
@@ -256,6 +257,8 @@ static void dw_mci_ssclk_control(struct dw_mci *host, int enable)
 		}
 	}
 }
+#endif
+
 static void dw_mci_exynos_set_clksel_timing(struct dw_mci *host, u32 timing)
 {
 	u32 clksel;
@@ -465,7 +468,9 @@ static void dw_mci_exynos_set_ios(struct dw_mci *host, struct mmc_ios *ios)
 			clksel = SDMMC_CLKSEL_UP_SAMPLE(priv->sdr_timing,
 					priv->tuned_sample);
 		}
+#ifdef CONFIG_SOC_EXYNOS9810
 		dw_mci_ssclk_control(host, 1);
+#endif
 		break;
 	case MMC_TIMING_UHS_SDR50:
 		if (priv->sdr50_timing)
@@ -475,7 +480,9 @@ static void dw_mci_exynos_set_ios(struct dw_mci *host, struct mmc_ios *ios)
 			clksel = SDMMC_CLKSEL_UP_SAMPLE(priv->sdr_timing,
 					priv->tuned_sample);
 		}
+#ifdef CONFIG_SOC_EXYNOS9810
 		dw_mci_ssclk_control(host, 1);
+#endif
 		break;
 	default:
 		clksel = priv->sdr_timing;
@@ -1699,7 +1706,9 @@ static const struct dw_mci_drv_data exynos_drv_data = {
 	.access_control_init	= dw_mci_exynos_access_control_init,
 	.access_control_abort	= dw_mci_exynos_access_control_abort,
 	.access_control_resume	= dw_mci_exynos_access_control_resume,
+#ifdef CONFIG_SOC_EXYNOS9810
 	.ssclk_control		= dw_mci_ssclk_control,
+#endif
 };
 
 static const struct of_device_id dw_mci_exynos_match[] = {
