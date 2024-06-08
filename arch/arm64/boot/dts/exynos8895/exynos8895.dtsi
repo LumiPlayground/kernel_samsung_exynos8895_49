@@ -3307,7 +3307,7 @@
 		#address-cells = <2>;
 		#size-cells = <1>;
 		ranges;
-		status = "disabled";
+		status = "okay";
 
 		usbdrd_dwc3: dwc3 {
 			compatible = "synopsys,dwc3";
@@ -3318,6 +3318,8 @@
 			enable_sprs_transfer;
 			phys = <&usbdrd_phy0 0>, <&usbdrd_phy0 1>;
 			phy-names = "usb2-phy", "usb3-phy";
+			dr_mode = "otg";
+			maximum-speed = "super-speed";
 		};
 	};
 
@@ -3329,12 +3331,15 @@
 		clock-names = "ext_xtal", "aclk";
 		samsung,pmu-syscon = <&pmu_system_controller>;
 		is_not_vbus_pad;
-		status = "disabled";
+		status = "okay";
 		#phy-cells = <1>;
 		#address-cells = <2>;
 		#size-cells = <1>;
 		ranges;
 		change_refclk = <1>;
+		pinctrl-names = "default";
+		pinctrl-0 = <&phy_port>;
+		phy,gpio_phy_port = <&gpi1 7 0x0>;
 
 		usbphy-refclk {
 			reg = <0x0 0x10E50070 0x10>;

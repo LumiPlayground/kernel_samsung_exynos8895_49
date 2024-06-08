@@ -952,21 +952,6 @@
 		muic,qc-hv = /bits/ 8 <0x9>;
 	};
 
-	usb@10C00000 {
-		status = "okay";
-		dwc3 {
-			dr_mode = "otg";
-			maximum-speed = "super-speed";
-		};
-	};
-
-	phy@10E00000 {
-		status = "okay";
-		pinctrl-names = "default";
-		pinctrl-0 = <&phy_port>;
-		phy,gpio_phy_port = <&gpi1 7 0x0>;
-	};
-
 	usb_notifier {
 		compatible = "samsung,usb-notifier";
 		udc = <&udc>;
