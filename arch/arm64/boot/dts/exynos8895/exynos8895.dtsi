@@ -3698,7 +3698,7 @@
 		use-cache-coherency = "true";
 		use-msi = "false";
 		use-sicd = "true";
-		status = "disabled";
+		status = "okay";
 	};
 
 	pcie1@116B0000 {

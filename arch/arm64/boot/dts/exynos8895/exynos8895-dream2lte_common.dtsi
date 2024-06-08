@@ -203,10 +203,6 @@
 		};
 	};
 
-	pcie0@116A0000 {
-		status = "okay";
-	};
-
 	wlan {
 		compatible = "samsung,brcm-wlan";
 		gpios = <&gpj1 3 0x1 /* WLAN_EN */
