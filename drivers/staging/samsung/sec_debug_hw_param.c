@@ -217,12 +217,14 @@ static ssize_t sec_hw_param_ap_info_show(struct kobject *kobj,
 	info_size +=
 	    snprintf((char *)(buf + info_size), DATA_SIZE - info_size,
 		     "\"BIN\":\"%c\",", warranty);
+#ifdef CONFIG_SOC_EXYNOS9810
 	info_size +=
 	    snprintf((char *)(buf + info_size), DATA_SIZE - info_size,
 		     "\"ASB\":\"%d\",", id_get_asb_ver());
 	info_size +=
 	    snprintf((char *)(buf + info_size), DATA_SIZE - info_size,
 		     "\"PSITE\":\"%d\",", id_get_product_line());
+#endif
 	info_size +=
 	    snprintf((char *)(buf + info_size), DATA_SIZE - info_size,
 		     "\"LOT_ID\":\"%s\",", lot_id);
@@ -246,6 +248,7 @@ static ssize_t sec_hw_param_ap_info_show(struct kobject *kobj,
 	    snprintf((char *)(buf + info_size), DATA_SIZE - info_size,
 		     "\"VST_ADJUST\":\"%d\",", volt_vst_cal_bdata);
 #endif
+#ifdef CONFIG_SOC_EXYNOS9810
 	info_size +=
 	    snprintf((char *)(buf + info_size), DATA_SIZE - info_size,
 		     "\"ASV_BIG\":\"%d\",", asv_ids_information(bg));
@@ -258,7 +261,7 @@ static ssize_t sec_hw_param_ap_info_show(struct kobject *kobj,
 	info_size +=
 	    snprintf((char *)(buf + info_size), DATA_SIZE - info_size,
 		     "\"IDS_BIG\":\"%d\"", asv_ids_information(bids));
-
+#endif
 	return info_size;
 }
 

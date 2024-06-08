@@ -341,9 +341,10 @@ void sec_debug_set_extra_info_id(void)
 	sec_debug_set_extra_info(INFO_BID, "%09lu%s", ts.tv_nsec, EXTRA_VERSION);
 	sec_debug_set_extra_info(INFO_CID, "%09lu%s", ts.tv_nsec, EXTRA_VERSION);
 	sec_debug_set_extra_info(INFO_MID, "%09lu%s", ts.tv_nsec, EXTRA_VERSION);
-
+#ifdef CONFIG_SOC_EXYNOS9810
 	sec_debug_set_extra_info(INFO_ASB, "%d", id_get_asb_ver());
 	sec_debug_set_extra_info(INFO_PSITE, "%d", id_get_product_line());
+#endif
 	sec_debug_set_extra_info(INFO_DDRID, "%s", dram_info);
 
 }

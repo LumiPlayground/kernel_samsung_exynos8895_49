@@ -25,8 +25,10 @@
 #define BUF_SIZE_MARGIN (SZ_1K - 0x80)
 
 #ifdef CONFIG_SEC_DEBUG
+#ifdef CONFIG_SOC_EXYNOS9810
 extern int id_get_asb_ver(void);
 extern int id_get_product_line(void);
+#endif
 extern void sec_debug_reboot_handler(void *p);
 extern void sec_debug_panic_handler(void *buf, bool dump);
 extern void sec_debug_post_panic_handler(void);
