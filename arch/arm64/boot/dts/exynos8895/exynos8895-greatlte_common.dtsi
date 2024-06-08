@@ -975,7 +975,6 @@
 		pinctrl-names = "default";
 		pinctrl-0 = <&phy_port>;
 		phy,gpio_phy_port = <&gpi1 7 0x0>;
-		use_additional_tuning;
 	};
 
 	usb_notifier {
