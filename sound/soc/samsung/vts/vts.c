@@ -453,8 +453,20 @@ static void vts_cfg_gpio(struct device *dev, const char *name)
 			dev_err(dev, "Unable to configure pinctrl %s\n", name);
 	}
 }
+#ifdef CONFIG_SOC_EXYNOS8895
+static u32 vts_set_baaw(void __iomem *sfr_base, u64 base, u32 size)
+{
+	u32 aligned_size = round_up(size, SZ_4M);
+	u64 aligned_base = round_down(base, aligned_size);
 
-#ifdef CONFIG_SOC_EXYNOS9810
+	writel(aligned_size / SZ_4K, sfr_base + VTS_VTS_MEM_CONFIG0);
+	writel(aligned_base / SZ_4K, sfr_base + VTS_VTS_MEM_CONFIG1);
+	writel(aligned_base / SZ_4K, sfr_base + VTS_VTS_MEM_CONFIG2);
+	writel(aligned_size / SZ_4K, sfr_base + VTS_VTS_MEM_CONFIG3);
+
+	return base - aligned_base + VTS_BAAW_BASE;
+}
+#elif CONFIG_SOC_EXYNOS9810
 static u32 vts_set_baaw(void __iomem *sfr_base, u64 base, u32 size)
 {
 	u32 aligned_size = round_up(size, SZ_4M);
