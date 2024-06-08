@@ -1864,6 +1864,7 @@ const struct samsung_pin_ctrl exynos8895_pin_ctrl[] = {
 		/* pin-controller instance 2 VTS data */
 		.pin_banks	= exynos8895_pin_banks2,
 		.nr_banks	= ARRAY_SIZE(exynos8895_pin_banks2),
+		.eint_gpio_init = exynos_eint_gpio_init,
 		/*
 		* When suspend callback function of syscore_ops is called
 		* from suspend framework, some power domains can be already
