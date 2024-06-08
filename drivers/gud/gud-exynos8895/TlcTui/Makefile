@@ -2,7 +2,7 @@
 # Makefile for the Kinibi trusted UI driver
 #
 
-GUD_ROOT_FOLDER := drivers/gud/
+GUD_ROOT_FOLDER := drivers/gud/gud-exynos8895/
 
 # add our modules to kernel.
 obj-$(CONFIG_TRUSTONIC_TRUSTED_UI) += TlcTui.o
