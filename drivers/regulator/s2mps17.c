@@ -89,6 +89,32 @@ static int s2m_set_mode(struct regulator_dev *rdev,
 	return 0;
 }
 
+/* set initial mode of LDO9,10,11,12,13,14 */
+int s2m_ldo_set_mode(int ldo_num, unsigned int mode)
+{
+	unsigned int val, ldo_addr;
+	int ret;
+
+	if (ldo_num < 9 || ldo_num > 14) {
+		pr_warn("Wrong LDO number! [%d]\n", ldo_num);
+		return -EINVAL;
+	}
+
+	val = mode << S2MPS17_ENABLE_SHIFT;
+	ldo_addr = S2MPS17_PMIC_REG_L9CTRL1 + (ldo_num - 9);
+
+	ret = s2mps17_update_reg(static_info->i2c, ldo_addr, val, 0xC0);
+	if (ret)
+		return ret;
+
+	pr_debug("%s : LDO%d mode [%d]\n", __func__, ldo_num, mode);
+
+	static_info->opmode[ldo_num] = val;
+	return 0;
+}
+EXPORT_SYMBOL_GPL(s2m_ldo_set_mode);
+
+
 static int s2m_enable(struct regulator_dev *rdev)
 {
 	struct s2mps17_info *s2mps17 = rdev_get_drvdata(rdev);
