@@ -3300,7 +3300,7 @@
 	};
 
 	udc: usb@10C00000 {
-		compatible = "samsung,exynos8895-dwusb3";
+		compatible = "samsung,exynos-dwusb";
 		clocks = <&clock GATE_USBTV_USB30DRD_LINK>, <&clock USBDRD30>;
 		clock-names = "aclk", "sclk";
 		reg = <0x0 0x10C00000 0x10000>;
@@ -3313,40 +3313,58 @@
 			compatible = "synopsys,dwc3";
 			reg = <0x0 0x10C00000 0x10000>;
 			interrupts = <0 337 0>;
-			is_not_vbus_pad;
+			tx-fifo-resize = <0>;
+			adj-sof-accuracy = <0>;
+			is_not_vbus_pad = <1>;
 			suspend_clk_freq = <66000000>;
-			enable_sprs_transfer;
+			enable_sprs_transfer = <1>;
 			phys = <&usbdrd_phy0 0>, <&usbdrd_phy0 1>;
 			phy-names = "usb2-phy", "usb3-phy";
+			xhci_l2_support = <0>;
+			usb_audio_offloading = <0>;
 			dr_mode = "otg";
 			maximum-speed = "super-speed";
+			snps,quirk-frame-length-adjustment = <32>;
+			snps,u1u2_exitfail_quirk;
+			snps,dis-u2-freeclk-exists-quirk;
 		};
 	};
 
 	usbdrd_phy0: phy@10E00000 {
-		compatible = "samsung,exynos8895-usbdrd-phy";
+		compatible = "samsung,exynos-usbdrd-phy";
 		reg = <0x0 0x10E00000 0x100>,
 			<0x0 0x10E10000 0x100>;
 		clocks = <&clock OSCCLK>, <&clock GATE_USBTV_USB30DRD_LINK>;
 		clock-names = "ext_xtal", "aclk";
 		samsung,pmu-syscon = <&pmu_system_controller>;
-		is_not_vbus_pad;
+		pmu_mask = <0>;
+		pmu_offset = <1836>;
+		pmu_offset_dp = <1796>;
+		phy_version = <768>;
+		phyclk_mux = "none";
+		phy_refclk = "ext_xtal";
+		has_other_phy = <0>;
+		has_combo_phy = <1>;
+		sub_phy_version = <1024>;
+		ip_type = <0>;
+		phy_refsel_clockcore = <1>;
+		phy_refsel_ext_osc = <0>;
+		phy_refsel_xtal = <0>;
+		phy_refsel_diff_pad = <0>;
+		phy_refsel_diff_internal = <0>;
+		phy_refsel_diff_single = <0>;
+		use_io_for_ovc = <0>;
+		common_block_disable = <1>;
+		is_not_vbus_pad = <1>;
+		used_phy_port = <0>;
 		status = "okay";
 		#phy-cells = <1>;
 		#address-cells = <2>;
 		#size-cells = <1>;
 		ranges;
-		change_refclk = <1>;
 		pinctrl-names = "default";
 		pinctrl-0 = <&phy_port>;
 		phy,gpio_phy_port = <&gpi1 7 0x0>;
-
-		usbphy-refclk {
-			reg = <0x0 0x10E50070 0x10>;
-			offset = <0xC>;
-			mask = <0x1000000>;
-			value = <0x1000000>;
-		};
 	};
 
 	iommu-domain_aud {
