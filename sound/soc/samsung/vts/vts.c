@@ -531,7 +531,7 @@ out:
 
 int vts_acquire_sram(struct platform_device *pdev, int vts)
 {
-#ifdef CONFIG_SOC_EXYNOS8895
+#if 0
 	struct vts_data *data = platform_get_drvdata(pdev);
 	int previous;
 	unsigned long flag;
@@ -569,7 +569,7 @@ EXPORT_SYMBOL(vts_acquire_sram);
 
 int vts_release_sram(struct platform_device *pdev, int vts)
 {
-#ifdef CONFIG_SOC_EXYNOS8895
+#if 0
 	struct vts_data *data = platform_get_drvdata(pdev);
 
 	dev_info(&pdev->dev, "%s(%d)\n", __func__, vts);
