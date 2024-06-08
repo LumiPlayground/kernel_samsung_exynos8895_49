@@ -490,19 +490,11 @@ static bool mc_fastcall(void *data)
 		.data = data,
 	};
 
-#if KERNEL_VERSION(4, 9, 0) <= LINUX_VERSION_CODE
 	if (!kthread_queue_work(&fastcall_worker, &fc_work.work))
 		return false;
 
 	/* If work is queued or executing, wait for it to finish execution */
 	kthread_flush_work(&fc_work.work);
-#else
-	if (!queue_kthread_work(&fastcall_worker, &fc_work.work))
-		return false;
-
-	/* If work is queued or executing, wait for it to finish execution */
-	flush_kthread_work(&fc_work.work);
-#endif
 #else
 	struct fastcall_work fc_work = {
 		.data = data,
