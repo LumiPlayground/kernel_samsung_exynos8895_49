@@ -545,9 +545,8 @@ struct tee_mmu *tee_mmu_create(struct mm_struct *mm,
 
 			/* Buffer was allocated in user space */
 			down_read(&mm->mmap_sem);
-			gup_ret = __get_user_pages(NULL, mm,
-						 (uintptr_t)reader, pages_nr,
-						 foll_flags, pages, 0, 0);
+			gup_ret = get_user_pages((uintptr_t)reader, pages_nr,
+						 foll_flags, pages, 0);
 			/* ExySp: end */
 			up_read(&mm->mmap_sem);
 			if (gup_ret < 0) {
