@@ -1,2 +1,4 @@
+obj-$(CONFIG_EXYNOS_DECON_8895)	+= panel/
+obj-$(CONFIG_EXYNOS_DECON_8895)	+= dpu/
 obj-$(CONFIG_EXYNOS_DECON_9810)	+= panel_9810/
 obj-$(CONFIG_EXYNOS_DECON_9810)	+= dpu_9810/
