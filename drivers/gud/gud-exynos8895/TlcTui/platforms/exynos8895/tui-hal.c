@@ -22,6 +22,7 @@
 #include <linux/exynos_ion.h>
 #include <linux/dma-buf.h>
 #include <linux/ion.h>
+#include <ion_priv.h>
 #include "decon.h"
 #include <t-base-tui.h>
 #include "dciTui.h"
@@ -224,7 +225,6 @@ uint32_t hal_tui_alloc(
 {
 	int ret = TUI_DCI_ERR_INTERNAL_ERROR;
 	ion_phys_addr_t phys_addr;
-	size_t phy_size = 0;
 	int i = 0;
 
 	if (tui_cover_mode_on == true) {
@@ -259,9 +259,13 @@ uint32_t hal_tui_alloc(
 				return ret;
 			}
 		}
-		ion_phys(client, handle[i], (unsigned long *)&phys_addr, &phy_size);
-		allocbuffer[i].pa = (uint64_t)phys_addr;
-		pr_info("[%s:%d] TUI buffer alloc idx:%d\n", __func__, __LINE__, i);
+		//ion_phys(client, handle[i], (unsigned long *)&phys_addr, &phy_size);
+		phys_addr = sg_phys(handle[i]->buffer->sg_table->sgl);
+		pr_info("[%s:%d] phys_addr:%lx\n", __func__, __LINE__,
+			phys_addr);
+		allocbuffer[i].pa = (uint64_t) phys_addr;
+		pr_info("[%s:%d] TUI buffer alloc idx:%d, pa:%lx\n", __func__,
+			__LINE__, i, phys_addr);
 	}
 
         ret = TUI_DCI_OK;
