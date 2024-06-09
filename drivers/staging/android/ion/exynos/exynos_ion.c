@@ -605,6 +605,7 @@ DECLARE_EXYNOS_ION_RESERVED_REGION("exynos8890-ion,", vscaler);
 DECLARE_EXYNOS_ION_RESERVED_REGION("exynos8890-ion,", camera);
 DECLARE_EXYNOS_ION_RESERVED_REGION("exynos8890-ion,", secure_camera);
 DECLARE_EXYNOS_ION_RESERVED_REGION("exynos8890-ion,", camera_contig);
+DECLARE_EXYNOS_ION_RESERVED_REGION("exynos8890-ion,", tui);
 
 static int __init exynos_ion_populate_heaps(struct ion_device *ion_dev)
 {
