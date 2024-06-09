@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013-2017 TRUSTONIC LIMITED
+ * Copyright (c) 2013-2018 TRUSTONIC LIMITED
  * All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or
@@ -29,7 +29,7 @@
 #include <linux/irq.h>
 #include <linux/version.h>
 #if KERNEL_VERSION(4, 11, 0) <= LINUX_VERSION_CODE
-#include <linux/sched/clock.h> /* local_clock */
+#include <linux/sched/clock.h>	/* local_clock */
 #endif
 
 #include "public/mc_user.h"
@@ -67,7 +67,7 @@ static struct {
 	/* Wait timeout */
 	u32			timeout;
 	/* Log of last MCP commands */
-#define MCP_LOG_SIZE 256
+#define MCP_LOG_SIZE 1024
 	struct mutex		last_mcp_cmds_mutex; /* Log protection */
 	struct mcp_command_info {
 		u64			cpu_clk;	/* Kernel time */
@@ -258,8 +258,8 @@ static inline int wait_mcp_notification(void)
 		int ret;
 
 		/*
-		 * Wait non-interruptible to keep MCP synchronised even if caller
-		 * is interrupted by signal.
+		 * Wait non-interruptible to keep MCP synchronised even if
+		 * caller is interrupted by signal.
 		 */
 		ret = wait_for_completion_timeout(&l_ctx.complete, timeout);
 		if (ret > 0)
@@ -269,7 +269,7 @@ static inline int wait_mcp_notification(void)
 
 		/* If SWd halted, exit now */
 		if (!mc_fc_info(MC_EXT_INFO_ID_MCI_VERSION, &status, NULL) &&
-		    (status == MC_STATUS_HALT))
+		    status == MC_STATUS_HALT)
 			break;
 	}
 
@@ -414,7 +414,7 @@ out:
 	}
 
 	if (err) {
-		if ((cmd_id == MC_MCP_CMD_CLOSE_SESSION) && (err == -EAGAIN))
+		if (cmd_id == MC_MCP_CMD_CLOSE_SESSION && err == -EAGAIN)
 			mc_dev_devel("%s: try again",
 				     mcp_cmd_to_string(cmd_id));
 		else
@@ -683,7 +683,7 @@ static inline void session_notif_handler(struct mcp_session *session, u32 id,
 			 */
 			if (!nq_session_is_gp(&session->nq_session) ||
 			    !session->exit_code ||
-			    (payload != ERR_SID_NOT_ACTIVE))
+			    payload != ERR_SID_NOT_ACTIVE)
 				session->exit_code = payload;
 
 			mutex_unlock(&session->exit_code_lock);

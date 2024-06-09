@@ -22,6 +22,7 @@
 #include <linux/completion.h>
 #include <linux/slab.h>
 #include <linux/uaccess.h>
+#include <linux/switch.h>
 
 #include "tui_ioctl.h"
 #include "tlcTui.h"
@@ -38,6 +39,29 @@
 
 /* Static variables */
 static struct cdev tui_cdev;
+
+struct switch_dev tui_switch;
+
+int tui_force_close(uint32_t arg)
+{
+	int ret = 0;
+
+	pr_info("Force TUI_IO_NOTIFY %d\n", arg);
+
+	if (tlc_notify_event(arg))
+		ret = 0;
+	else
+		ret = -EFAULT;
+	return ret;
+}
+EXPORT_SYMBOL(tui_force_close);
+
+void tui_cover_mode_set(bool arg)
+{
+	pr_info("tui cover mode set to %d\n", arg);
+	tui_cover_mode_on = arg;
+}
+EXPORT_SYMBOL(tui_cover_mode_set);
 
 static long tui_ioctl(struct file *f, unsigned int cmd, unsigned long arg)
 {
@@ -113,6 +137,24 @@ static long tui_ioctl(struct file *f, unsigned int cmd, unsigned long arg)
 		break;
 	}
 
+	//case TUI_IO_DISPLAY_NOTIFY:{
+	case TUI_IO_SET_RESOLUTION:{
+			struct tlc_tui_resolution_t response;
+			//pr_info("TUI_IO_DISPLAY_NOTIFY\n");
+			pr_info("TUI_IO_RESOLUTION\n");
+
+			// Read user response
+			if (copy_from_user(&response, uarg, sizeof(response)))
+				ret = -EFAULT;
+			else
+				ret = 0;
+			pr_info("IOCTL: User completed command w=%d, h=%d.\n", response.width, response.height);
+			ret = tlc_display_cmd(&response);
+			if (ret != 0)
+				return ret;
+			break;
+		}
+
 	default:
 		pr_info("ERROR %s:%d Unknown ioctl (%u)!\n", __func__,
 			__LINE__, cmd);
@@ -181,10 +223,23 @@ static int __init tlc_tui_init(void)
 	}
 
 	tui_class = class_create(THIS_MODULE, "tui_cls");
+	if (IS_ERR(tui_class)) {
+		pr_debug("Failed to create tui class.\n");
+		unregister_chrdev_region(devno, 1);
+		cdev_del(&tui_cdev);
+		return -1;
+	}
+
 	device_create(tui_class, NULL, devno, NULL, TUI_DEV_NAME);
 
 	if (!hal_tui_init())
 		return -EPERM;
+
+	/* register the switch device for tui */
+	tui_switch.name = "tui";
+	err = switch_dev_register(&tui_switch);
+	if (err)
+		pr_debug("Failed to register tui_switch.\n");
 
 	return 0;
 }
@@ -192,7 +247,7 @@ static int __init tlc_tui_init(void)
 static void __exit tlc_tui_exit(void)
 {
 	pr_info("Unloading t-base-tui module.\n");
-
+	switch_dev_unregister(&tui_switch);
 	unregister_chrdev_region(tui_cdev.dev, 1);
 	cdev_del(&tui_cdev);
 
