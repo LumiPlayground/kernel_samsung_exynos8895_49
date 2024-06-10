@@ -649,7 +649,7 @@ static int decon_get_protect_id(int dma_id)
 		prot_id = PROT_VGR0;
 		break;
 	case IDMA_VGF1:
-		prot_id = PROT_VGR1;
+		prot_id = PROT_VGRF;
 		break;
 	case ODMA_WB:
 		prot_id = PROT_WB1;
