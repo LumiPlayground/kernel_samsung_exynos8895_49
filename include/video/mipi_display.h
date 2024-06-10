@@ -62,6 +62,8 @@ enum {
 
 	MIPI_DSI_DSC_PRA				= 0x07,
 	MIPI_DSI_DSC_PPS				= 0x0a,
+	MIPI_DSI_OEM1_WR_SIDE_RAM		= 0x4C,
+	MIPI_DSI_OEM1_WR_SIDE_RAM2		= 0x5C,
 };
 
 /* MIPI DSI Peripheral-to-Processor transaction types */
