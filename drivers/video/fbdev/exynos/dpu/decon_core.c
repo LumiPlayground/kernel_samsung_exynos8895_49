@@ -42,7 +42,7 @@
 #include "decon.h"
 #include "dsim.h"
 
-#include "../../../../staging/android/sw_sync.h"
+#include "../../../../dma-buf/sync_debug.h"
 #include "dpp.h"
 #include "displayport.h"
 
@@ -454,7 +454,7 @@ static void decon_free_dma_buf(struct decon_device *decon,
 		return;
 
 	if (dma->fence)
-		sync_fence_put(dma->fence);
+		fput(dma->fence->file);
 
 	ion_iovmm_unmap(dma->attachment, dma->dma_addr);
 
@@ -656,7 +656,7 @@ static int decon_enable(struct decon_device *decon)
 #endif
 	if (decon->dt.out_type == DECON_OUT_DP) {
 		decon_info("DECON_OUT_DP %s timeline:%d, max:%d\n",
-			decon->timeline->obj.name, decon->timeline->value, decon->timeline_max);
+			decon->timeline->name, decon->timeline->value, decon->timeline_max);
 
 		decon_reg_set_dispif_sync_pol(decon->id, videoformat_parameters[g_displayport_videoformat].h_sync_pol ? 0 : 1,
 				videoformat_parameters[g_displayport_videoformat].v_sync_pol ? 0 : 1);
@@ -826,7 +826,7 @@ static int decon_disable(struct decon_device *decon)
 			decon_err("displayport stopping stream failed\n");
 		}
 		decon_info("DECON_OUT_DP %s timeline:%d, max:%d\n",
-			decon->timeline->obj.name, decon->timeline->value, decon->timeline_max);
+			decon->timeline->name, decon->timeline->value, decon->timeline_max);
 
 		decon->bts.ops->bts_update_qos_mif(decon, 0);
 		decon->bts.ops->bts_update_qos_int(decon, 0);
@@ -1357,7 +1357,7 @@ static int decon_set_win_buffer(struct decon_device *decon,
 	int ret, i;
 	u32 alpha_length;
 	struct decon_rect r;
-	struct sync_fence *fence = NULL;
+	struct sync_file *fence = NULL;
 	u32 config_size = 0;
 	u32 alloc_size = 0;
 	u32 byte_per_pixel = 4;
@@ -1380,7 +1380,7 @@ static int decon_set_win_buffer(struct decon_device *decon,
 
 	if (config->fence_fd >= 0) {
 		/* fence is managed by buffer not plane */
-		fence = sync_fence_fdget(config->fence_fd);
+		fence = sync_file_fdget(config->fence_fd);
 		regs->dma_buf_data[idx][0].fence = fence;
 		if (!fence) {
 			decon_err("failed to import fence fd\n");
@@ -2170,7 +2170,6 @@ static void decon_release_old_bufs(struct decon_device *decon,
 static void decon_update_regs(struct decon_device *decon,
 		struct decon_reg_data *regs)
 {
-	int ret;
 	struct decon_dma_buf_data old_dma_bufs[decon->dt.max_win][MAX_PLANE_CNT];
 	int old_plane_cnt[MAX_DECON_WIN];
 	struct decon_mode_info psr;
@@ -2188,26 +2187,10 @@ static void decon_update_regs(struct decon_device *decon,
 
 	decon_acquire_old_bufs(decon, regs, old_dma_bufs, old_plane_cnt);
 
-	DPU_EVENT_LOG_FENCE(&decon->sd, regs, DPU_EVT_ACQUIRE_FENCE);
-
-	decon->tracing_mark_write( decon->systrace_pid, 'B', "decon_fence_wait", 0 );
 	for (i = 0; i < decon->dt.max_win; i++) {
-		if (regs->dma_buf_data[i][0].fence) {
-			ret = decon_wait_fence(regs->dma_buf_data[i][0].fence);
-			if (ret < 0) {
-				decon_fence_err_log(decon, i, regs->dma_buf_data[i][0].fence);
-
-				if (regs->dpp_config[i].compression == true) {
-					regs->dpp_config[i].state = DECON_WIN_STATE_DISABLED;
-					regs->num_of_window--;
-					decon_err("[decon%d:w%d:dma%d] disabled (T_win cnt: %d)\n",
-						decon->id, i, regs->dpp_config[i].idma_type,
-						regs->num_of_window);
-				}
-			}
-		}
+		if (regs->dma_buf_data[i][0].fence)
+			decon_wait_fence(regs->dma_buf_data[i][0].fence);
 	}
-	decon->tracing_mark_write( decon->systrace_pid, 'E', "decon_fence_wait", 0 );
 
 	decon_check_used_dpp(decon, regs);
 
@@ -2337,7 +2320,7 @@ end:
 	/* signal to acquire fence */
 	decon_signal_fence(decon);
 
-	DPU_EVENT_LOG_FENCE(&decon->sd, regs, DPU_EVT_RELEASE_FENCE);
+	DPU_EVENT_LOG(DPU_EVT_RELEASE_FENCE, &decon->sd, ktime_set(0, 0));
 
 	SYSTRACE_C_BEGIN("decon_bts");
 	/* add update bw : cur < prev */
@@ -2664,7 +2647,6 @@ static int decon_set_win_config(struct decon_device *decon,
 {
 	int num_of_window = 0;
 	struct decon_reg_data *regs;
-	struct sync_fence *fence;
 	int ret = 0;
 
 	decon_dbg("%s +\n", __func__);
@@ -2673,9 +2655,7 @@ static int decon_set_win_config(struct decon_device *decon,
 #ifdef CONFIG_SUPPORT_GRAM_CHECKSUM
 	if(decon->gct_on) {
 		decon_info("decon is not active because GCT mode : %d\n", decon->gct_on);
-		win_data->fence = decon_create_fence(decon, &fence, NULL);
-		if (win_data->fence >= 0)
-			decon_install_fence(fence, win_data->fence);
+		win_data->fence = decon_create_fence(decon);
 		decon_signal_fence(decon);
 		goto err;
 
@@ -2685,9 +2665,7 @@ static int decon_set_win_config(struct decon_device *decon,
 	if (!check_decon_state(decon) || decon->state == DECON_STATE_TUI) {
 		decon_info("decon is not active : %d :%d\n",
 			check_decon_state(decon), decon->state);
-		win_data->fence = decon_create_fence(decon, &fence, NULL);
-		if (win_data->fence >= 0)
-			decon_install_fence(fence, win_data->fence);
+		win_data->fence = decon_create_fence(decon);
 		decon_signal_fence(decon);
 		goto err;
 	}
@@ -2725,18 +2703,12 @@ static int decon_set_win_config(struct decon_device *decon,
 */
 	num_of_window = decon_get_active_win_count(decon, win_data);
 	if (num_of_window) {
-		win_data->fence = decon_create_fence(decon, &fence, regs);
+		win_data->fence = decon_create_fence(decon);
 		if (win_data->fence < 0)
 			goto err_prepare;
 	} else {
-#if 1
 		decon->timeline_max++;
 		win_data->fence = -1;
-#else
-		win_data->fence = decon_create_fence(decon, &fence, regs);
-		decon_signal_fence(decon);
-		goto err_prepare;
-#endif
 	}
 
 	dpu_prepare_win_update_config(decon, win_data, regs);
@@ -2744,9 +2716,6 @@ static int decon_set_win_config(struct decon_device *decon,
 	ret = decon_prepare_win_config(decon, win_data, regs);
 	if (ret)
 		goto err_prepare;
-
-	if (win_data->fence >= 0)
-		decon_install_fence(fence, win_data->fence);
 
 	decon_hiber_block(decon);
 
@@ -2763,13 +2732,6 @@ static int decon_set_win_config(struct decon_device *decon,
 	return ret;
 
 err_prepare:
-	if (win_data->fence >= 0) {
-		/* video mode should keep previous buffer object */
-		if (decon->lcd_info->mode == DECON_MIPI_COMMAND_MODE)
-			decon_signal_fence(decon);
-		sync_fence_put(fence);
-		put_unused_fd(win_data->fence);
-	}
 	kfree(regs);
 	win_data->fence = -1;
 err:

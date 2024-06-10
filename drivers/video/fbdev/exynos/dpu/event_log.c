@@ -307,58 +307,6 @@ void DPU_EVENT_LOG_WINCON(struct v4l2_subdev *sd, struct decon_reg_data *regs)
 	}
 }
 
-static int sync_status_str(int status)
-{
-	if (status == 0)
-		return 0; /*"signaled";*/
-
-	if (status > 0)
-		return 1; /*"active";*/
-
-	return 9; /*"error";*/
-}
-
-void DPU_EVENT_LOG_FENCE(struct v4l2_subdev *sd, struct decon_reg_data *regs, dpu_event_t type)
-{
-	struct decon_device *decon = container_of(sd, struct decon_device, sd);
-	int idx = atomic_inc_return(&decon->d.event_log_idx) % DPU_EVENT_LOG_MAX;
-	struct dpu_log *log = &decon->d.event_log[idx];
-	int win = 0;
-	struct sync_fence *fence = NULL;
-	static int fence_log_cnt;
-
-	log->time = ktime_get();
-	log->type = type;
-
-	if (++fence_log_cnt < (DPU_EVENT_LOG_MAX/2))
-		return;
-
-	--fence_log_cnt;
-
-	for (win = 0; win < MAX_DECON_WIN; win++) {
-		log->data.fence.acquire_fence[win][0] = '\0';
-		fence = regs->dma_buf_data[win][0].fence;
-		if (fence) {
-#if defined(CONFIG_SAMSUNG_PRODUCT_SHIP)
-			snprintf(&log->data.fence.acquire_fence[win][0], ACQUIRE_FENCE_LEN, "%pK:%s:%d",
-				fence, fence->name, sync_status_str(atomic_read(&fence->status)));
-#else
-			snprintf(&log->data.fence.acquire_fence[win][0], ACQUIRE_FENCE_LEN, "%p:%s:%d",
-				fence, fence->name, sync_status_str(atomic_read(&fence->status)));
-#endif
-		}
-	}
-
-	log->data.fence.release_fence[0] = '\0';
-	if (regs->pt) {
-		snprintf(&log->data.fence.release_fence[0], RELEASE_FENCE_LEN, "decon%d_pt:%d/%d",
-			decon->id, ((struct sw_sync_pt *)(regs->pt))->value, decon->timeline->value);
-	}
-
-	log->data.fence.timeline_value = decon->timeline->value;
-	log->data.fence.timeline_max = decon->timeline_max;
-}
-
 extern void *return_address(int);
 
 /* Common API to log a event related with DSIM COMMAND */

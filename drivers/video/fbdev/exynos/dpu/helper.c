@@ -326,7 +326,7 @@ void decon_to_init_param(struct decon_device *decon, struct decon_param *p)
 /* sync fence related functions */
 void decon_create_timeline(struct decon_device *decon, char *name)
 {
-	decon->timeline = sw_sync_timeline_create(name);
+	decon->timeline = sync_timeline_create(name);
 
 	if (decon->dt.out_type == DECON_OUT_DSI)
 		decon->timeline_max = 1;
@@ -338,46 +338,39 @@ void decon_create_timeline(struct decon_device *decon, char *name)
 		decon->timeline_max = 1;
 }
 
-int decon_create_fence(struct decon_device *decon,
-		struct sync_fence **fence, struct decon_reg_data *regs)
+int decon_create_fence(struct decon_device *decon)
 {
 	struct sync_pt *pt;
+	struct sync_file *sync_file;
 	int fd = -EMFILE;
 
 	decon->timeline_max++;
-	pt = sw_sync_pt_create(decon->timeline, decon->timeline_max);
+	pt = sync_pt_create(decon->timeline, sizeof(*pt), decon->timeline_max);
 	if (!pt) {
 		decon_err("%s: failed to create sync pt\n", __func__);
 		goto err;
 	}
 
-	*fence = sync_fence_create("display", pt);
-	if (!(*fence)) {
-		decon_err("%s: failed to create fence\n", __func__);
-		sync_pt_free(pt);
+	sync_file = sync_file_create(&pt->base);
+	if (!sync_file) {
+		decon_err("%s: failed to create sync file\n", __func__);
+		fence_put(&pt->base);
 		goto err;
 	}
-
-	if (regs)
-		regs->pt = pt;
 
 	fd = get_unused_fd_flags(0);
 	if (fd < 0) {
 		decon_err("%s: failed to get unused fd\n", __func__);
-		sync_fence_put(*fence);
 		goto err;
 	}
+
+	fd_install(fd, sync_file->file);
 
 	return fd;
 
 err:
 	decon->timeline_max--;
 	return fd;
-}
-
-void decon_install_fence(struct sync_fence *fence, int fd)
-{
-	sync_fence_install(fence, fd);
 }
 
 int decon_print_fence_err(struct decon_device *decon, struct seq_file *s)
@@ -462,57 +455,19 @@ exit_dump:
 	return 0;
 }
 
-
-#define FENCE_NAME_MAX	32
-#define FENCE_NAME_STR_MAX (FENCE_NAME_MAX - 1)
-
-void decon_fence_err_log(struct decon_device *decon, int idx, struct sync_fence *fence)
-
+void decon_wait_fence(struct sync_file *sync_file)
 {
-	int err_idx;
-	int namelen;
+	int err = sync_file_wait(sync_file, 900);
+	if (err >= 0)
+		return;
 
-	namelen = strlen(fence->name);
-	if (namelen > FENCE_NAME_STR_MAX)
-		namelen = FENCE_NAME_STR_MAX;
-
-	if (decon->fence_err_cnt == 0) {
-		decon->first_fence_err.win_id = idx;
-		decon->first_fence_err.time = ktime_get();
-		decon->first_fence_err.status = atomic_read(&fence->status);
-		memset(decon->first_fence_err.name, 0, FENCE_NAME_MAX);
-		strncpy(decon->first_fence_err.name, fence->name, namelen);
-	}
-
-	err_idx = decon->fence_err_cnt % FENCE_ERR_LIST_CNT;
-	decon->fence_err_list[err_idx].win_id = idx;
-	decon->fence_err_list[err_idx].time = ktime_get();
-	decon->fence_err_list[err_idx].status = atomic_read(&fence->status);
-	memset(decon->fence_err_list[err_idx].name, 0, FENCE_NAME_MAX);
-	strncpy(decon->fence_err_list[err_idx].name, fence->name, namelen);
-
-	decon->fence_err_cnt += 1;
-
-	decon_print_fence_err(decon, NULL);
-}
-
-
-int decon_wait_fence(struct sync_fence *fence)
-{
-	int err = 0;
-
-	snprintf(acquire_fence_log, ACQUIRE_FENCE_LEN, "%p:%s:%d",
-			fence, fence->name, atomic_read(&fence->status));
-	err = sync_fence_wait(fence, 900);
 	if (err < 0)
-		decon_warn("%s: error waiting on acquire fence: %d\n", acquire_fence_log, err);
-
-	return err;
+		decon_warn("error waiting on acquire fence: %d\n", err);
 }
 
 void decon_signal_fence(struct decon_device *decon)
 {
-	sw_sync_timeline_inc(decon->timeline, 1);
+	sync_timeline_signal(decon->timeline, 1);
 }
 
 void dpu_debug_printk(const char *function_name, const char *format, ...)

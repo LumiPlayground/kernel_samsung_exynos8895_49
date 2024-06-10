@@ -35,7 +35,7 @@
 #include "decon_lcd.h"
 #include "dsim.h"
 #include "displayport.h"
-#include "../../../../staging/android/sw_sync.h"
+#include "../../../../dma-buf/sync_debug.h"
 #include "../panel/panel_drv.h"
 #ifdef CONFIG_DISPLAY_USE_INFO
 #include "../panel/dpui.h"
@@ -655,7 +655,7 @@ struct decon_dma_buf_data {
 	struct dma_buf_attachment	*attachment;
 	struct sg_table			*sg_table;
 	dma_addr_t			dma_addr;
-	struct sync_fence		*fence;
+	struct sync_file		*fence;
 };
 
 struct decon_win_rect {
@@ -936,7 +936,6 @@ typedef enum dpu_event_log_level_type {
 #define DPU_EVENT_START() ktime_t start = ktime_get()
 void DPU_EVENT_LOG(dpu_event_t type, struct v4l2_subdev *sd, ktime_t time);
 void DPU_EVENT_LOG_WINCON(struct v4l2_subdev *sd, struct decon_reg_data *regs);
-void DPU_EVENT_LOG_FENCE(struct v4l2_subdev *sd, struct decon_reg_data *regs, dpu_event_t type);
 void DPU_EVENT_LOG_CMD(struct v4l2_subdev *sd, u32 cmd_id, char data);
 void DPU_EVENT_SHOW(struct seq_file *s, struct decon_device *decon);
 int decon_create_debugfs(struct decon_device *decon);
@@ -945,7 +944,6 @@ void decon_destroy_debugfs(struct decon_device *decon);
 #define DPU_EVENT_START(...) do { } while(0)
 #define DPU_EVENT_LOG(...) do { } while(0)
 #define DPU_EVENT_LOG_WINCON(...) do { } while(0)
-#define DPU_EVENT_LOG_FENCE(...) do { } while (0)
 #define DPU_EVENT_LOG_CMD(...) do { } while(0)
 #define DPU_EVENT_SHOW(...) do { } while(0)
 #define decon_create_debugfs(...) do { } while(0)
@@ -1183,7 +1181,7 @@ struct decon_device {
 
 	struct ion_client *ion_client;
 
-	struct sw_sync_timeline *timeline;
+	struct sync_timeline *timeline;
 	int timeline_max;
 
 	struct v4l2_subdev *out_sd[MAX_DSIM_CNT];
@@ -1605,11 +1603,8 @@ void decon_dump(struct decon_device *decon, u32 dump_lv);
 void decon_to_psr_info(struct decon_device *decon, struct decon_mode_info *psr);
 void decon_to_init_param(struct decon_device *decon, struct decon_param *p);
 void decon_create_timeline(struct decon_device *decon, char *name);
-int decon_create_fence(struct decon_device *decon,
-		struct sync_fence **fence, struct decon_reg_data *regs);
-void decon_install_fence(struct sync_fence *fence, int fd);
-int decon_wait_fence(struct sync_fence *fence);
-void decon_fence_err_log(struct decon_device *decon, int idx, struct sync_fence *fence);
+int decon_create_fence(struct decon_device *decon);
+void decon_wait_fence(struct sync_file *fence);
 int decon_print_fence_err(struct decon_device *decon, struct seq_file *s);
 void decon_signal_fence(struct decon_device *decon);
 
